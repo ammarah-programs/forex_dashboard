@@ -79,20 +79,6 @@ def analyze_news(pair: str, news_items: list) -> dict:
             impact = "Neutral"
 
                   
-       
-
-            score = 0
-            score += sum(term in text_blob for term in bullish_terms)
-            score -= sum(term in text_blob for term in bearish_terms)
-
-            if score > 0:
-                impact = "Bullish"
-                confidence = max(confidence, 65)
-            elif score < 0:
-                impact = "Bearish"
-                confidence = max(confidence, 65)
- 
-
         confidence = int(data.get("confidence", 55))
         confidence = max(0, min(100, confidence))
 
@@ -127,7 +113,12 @@ def ask_dashboard_ai(question: str, all_news: list) -> str:
         return "Ask a question about today's macro news or FX bias."
 
     if not all_news:
-        return "No news available to analyze today."
+        return (
+            "There is no major news today. Markets are likely driven by technicals and trader sentiment. "
+            "Key factors to monitor include central bank policy, economic releases, risk appetite, "
+            "and geopolitical developments. Traders are likely watching rates, inflation, and short-term market sentiment."
+        )
+
 
     formatted = []
     for item in all_news:
@@ -140,15 +131,21 @@ def ask_dashboard_ai(question: str, all_news: list) -> str:
 
     payload = {
     "pair": "DASHBOARD",
-     "instructions": (
-        "You are an FX market assistant.\n"
-        "Answer the user's question using ONLY the provided news.\n"
-        "DO NOT infer or change directional bias.\n"
-        "If the news is indirect or not FX-relevant, explicitly state that a Neutral bias is appropriate.\n"
-        "Explain reasoning based on real sources only.\n"
-        "Do NOT speculate beyond the articles.\n"
-        "Plain text only."
-    ),
+    "instructions": (
+    "Directional bias is determined elsewhere in the dashboard and must not be contradicted.\n"
+    "You are a professional institutional FX macro assistant.\n"
+    "Answer the user's question using ONLY the provided news sources, which may include Investing.com, IBD, and other trusted dashboard feeds.\n"
+    "Reference the provided sources when explaining reasoning.\n"
+    "Always provide detailed reasoning and structured explanation, even if news is neutral or low-impact.\n"
+    "If news is limited, provide general macroeconomic context and potential market implications, "
+    "but DO NOT invent facts or external news.\n"
+    "Respond in clear, analytical paragraphs. Provide reasoning for all statements. Plain text only."
+),
+
+
+
+
+
 
 
 
@@ -167,10 +164,10 @@ def ask_dashboard_ai(question: str, all_news: list) -> str:
         data = r.json()
 
         answer = (
-            data.get("summary")
+            data.get("deep_view")
+            or data.get("summary")
             or data.get("analysis")
-            or data.get("deep_view")
-            or "No clear answer returned."
+            or "AI reasoning unavailable."
         )
 
 
